@@ -1,11 +1,15 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from scipy.integrate import solve_ivp
 
-
+# Configurar Streamlit (debe ser lo primero)
 st.set_page_config(page_title="Modelo IS-LM", layout="wide")
 st.title("Simulación del Modelo IS-LM (Dinámica y Estática)")
+
+# Aplicar tema con Seaborn (esto configura el estilo sin usar plt.style.use)
+sns.set_theme(style="darkgrid")
 
 # ==============================
 # SECCIÓN: Parámetros del Modelo
@@ -52,7 +56,6 @@ params = {
     "beta": beta,
 }
 
-
 # ==============================
 # SECCIÓN: Definición del Modelo
 # ==============================
@@ -82,7 +85,6 @@ def is_lm_odes(t, state, params):
     dr_dt = beta * (M_o - M_bar + k * Y - mu * r)
     return [dY_dt, dr_dt]
 
-
 def static_curves(Y_range, params):
     """
     Calcula las curvas estáticas IS y LM:
@@ -109,7 +111,6 @@ def static_curves(Y_range, params):
     r_IS = np.maximum(r_IS, 0)
     r_LM = np.maximum(r_LM, 0)
     return r_IS, r_LM
-
 
 def equilibrium(params):
     """
@@ -140,7 +141,6 @@ def equilibrium(params):
     r_eq = max(r_eq, 0)
     return Y_eq, r_eq
 
-
 # ==============================
 # SECCIÓN: Simulación y Gráficas
 # ==============================
@@ -158,9 +158,10 @@ if st.button("Simular Modelo"):
                     t_eval=t_eval)
     t_vals = sol.t
     Y_vals = sol.y[0]
-    r_vals = np.maximum(sol.y[1], 0)  # Evitamos tasas negativas en la solución
+    # Evitamos tasas negativas en la solución
+    r_vals = np.maximum(sol.y[1], 0)
 
-    # Gráfico: Evolución en el tiempo (tamaño más reducido)
+    # Gráfico: Evolución en el tiempo (tamaño compacto)
     fig_time, ax_time = plt.subplots(figsize=(5, 3))
     ax_time.plot(t_vals, Y_vals, label="Producto (Y)", color="blue", lw=2)
     ax_time.plot(t_vals, r_vals, label="Tasa de interés (r)", color="red", lw=2)
