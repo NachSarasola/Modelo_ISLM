@@ -3,7 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 
-# Configuración de la página
+# Establecer un estilo estético para los gráficos
+plt.style.use('seaborn-darkgrid')
+
 st.set_page_config(page_title="Modelo IS-LM", layout="wide")
 st.title("Simulación del Modelo IS-LM (Dinámica y Estática)")
 
@@ -32,7 +34,8 @@ beta = st.sidebar.number_input("Velocidad de ajuste dinero (β)", value=0.1)
 # Condiciones iniciales y tiempo para la simulación dinámica
 Y0 = st.sidebar.number_input("Producto inicial (Y₀)", value=1000.0)
 r0 = st.sidebar.number_input("Tasa de interés inicial (r₀)", value=5.0)
-t_end = st.sidebar.number_input("Tiempo de simulación", value=100.0)
+# Se limita el tiempo máximo a 10
+t_end = st.sidebar.number_input("Tiempo de simulación (máx 10)", value=10.0, max_value=10.0)
 
 # Organizar parámetros en un diccionario (útil para las funciones)
 params = {
@@ -104,6 +107,9 @@ def static_curves(Y_range, params):
 
     r_IS = (a - b * T0 + I0 + G_bar - (1 - b * (1 - lam)) * Y_range) / h
     r_LM = (M_o + k * Y_range - M_bar) / mu
+    # Evitamos tasas negativas: si alguna tasa es menor a 0, se recorta a 0.
+    r_IS = np.maximum(r_IS, 0)
+    r_LM = np.maximum(r_LM, 0)
     return r_IS, r_LM
 
 
@@ -132,6 +138,8 @@ def equilibrium(params):
 
     Y_eq = (a - b * T0 + I0 + G_bar + (h / mu) * (M_bar - M_o)) / (1 - b * (1 - lam) + (h * k) / mu)
     r_eq = (M_o + k * Y_eq - M_bar) / mu
+    # Recortar r_eq a 0 si es negativo
+    r_eq = max(r_eq, 0)
     return Y_eq, r_eq
 
 
@@ -142,7 +150,7 @@ def equilibrium(params):
 if st.button("Simular Modelo"):
     # --- Simulación Dinámica ---
     t_start = 0
-    t_end_val = t_end
+    t_end_val = t_end  # Se asume que t_end <= 10
     t_span = (t_start, t_end_val)
     t_eval = np.linspace(t_start, t_end_val, 500)
 
@@ -152,24 +160,26 @@ if st.button("Simular Modelo"):
                     t_eval=t_eval)
     t_vals = sol.t
     Y_vals = sol.y[0]
-    r_vals = sol.y[1]
+    r_vals = np.maximum(sol.y[1], 0)  # Evitamos tasas negativas en la solución
 
-    # Gráfico: Evolución en el tiempo
-    fig_time, ax_time = plt.subplots(figsize=(7, 4))
-    ax_time.plot(t_vals, Y_vals, label="Producto (Y)", color="blue")
-    ax_time.plot(t_vals, r_vals, label="Tasa de interés (r)", color="red")
+    # Gráfico: Evolución en el tiempo (tamaño más reducido)
+    fig_time, ax_time = plt.subplots(figsize=(5, 3))
+    ax_time.plot(t_vals, Y_vals, label="Producto (Y)", color="blue", lw=2)
+    ax_time.plot(t_vals, r_vals, label="Tasa de interés (r)", color="red", lw=2)
     ax_time.set_xlabel("Tiempo")
     ax_time.set_ylabel("Valor")
-    ax_time.set_title("Evolución Dinámica de Y y r")
-    ax_time.legend()
+    ax_time.set_title("Evolución Dinámica")
+    ax_time.legend(fontsize=9)
+    ax_time.grid(True)
     st.pyplot(fig_time)
 
-    # Diagrama de fase: r vs. Y
-    fig_phase, ax_phase = plt.subplots(figsize=(7, 4))
-    ax_phase.plot(Y_vals, r_vals, color="green")
+    # Diagrama de fase: r vs. Y (más compacto)
+    fig_phase, ax_phase = plt.subplots(figsize=(5, 3))
+    ax_phase.plot(Y_vals, r_vals, color="green", lw=2)
     ax_phase.set_xlabel("Producto (Y)")
     ax_phase.set_ylabel("Tasa de interés (r)")
-    ax_phase.set_title("Diagrama de Fase: Trayectoria Dinámica")
+    ax_phase.set_title("Diagrama de Fase")
+    ax_phase.grid(True)
     st.pyplot(fig_phase)
 
     # --- Gráfica Estática (Curvas IS y LM) ---
@@ -177,12 +187,13 @@ if st.button("Simular Modelo"):
     r_IS, r_LM = static_curves(Y_range, params)
     Y_eq, r_eq = equilibrium(params)
 
-    fig_static, ax_static = plt.subplots(figsize=(7, 5))
-    ax_static.plot(Y_range, r_IS, label="Curva IS", color="blue")
-    ax_static.plot(Y_range, r_LM, label="Curva LM", color="red")
-    ax_static.plot(Y_eq, r_eq, 'ko', label="Equilibrio\n(Y*, r*)")
+    fig_static, ax_static = plt.subplots(figsize=(5, 3))
+    ax_static.plot(Y_range, r_IS, label="Curva IS", color="blue", lw=2)
+    ax_static.plot(Y_range, r_LM, label="Curva LM", color="red", lw=2)
+    ax_static.plot(Y_eq, r_eq, 'ko', markersize=6, label="Equilibrio\n(Y*, r*)")
     ax_static.set_xlabel("Producto (Y)")
     ax_static.set_ylabel("Tasa de interés (r)")
-    ax_static.set_title("Diagrama Estático: Curvas IS y LM")
-    ax_static.legend()
+    ax_static.set_title("Curvas IS y LM (Estático)")
+    ax_static.legend(fontsize=9)
+    ax_static.grid(True)
     st.pyplot(fig_static)
