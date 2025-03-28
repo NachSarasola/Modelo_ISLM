@@ -12,7 +12,7 @@ st.title("Simulación del Modelo IS-LM (Dinámica y Estática)")
 sns.set_theme(style="darkgrid")
 
 # ==============================
-# SECCIÓN: Parámetros del Modelo
+# SECCIÓN: Parámetros del Modelo.
 # ==============================
 st.sidebar.header("Parámetros del Modelo")
 
