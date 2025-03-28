@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 
-# Establecer un estilo estético para los gráficos
-plt.style.use('seaborn-darkgrid')
 
 st.set_page_config(page_title="Modelo IS-LM", layout="wide")
 st.title("Simulación del Modelo IS-LM (Dinámica y Estática)")
